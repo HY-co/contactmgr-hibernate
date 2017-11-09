@@ -30,16 +30,60 @@ public class Application {
                 .withEmail("rama@treehouse.com")
                 .withPhone(7766551234L)
                 .build();
-        save(contact);
+        int id = save(contact);
 
         // Display a list of contacts
-        for (Contact c : fetchAllContacts()) {
-            System.out.println(c);
-        }
+        System.out.printf("%n%nBefore Updating%n%n");
+        fetchAllContacts().stream().forEach(System.out::println);
 
+        // Get the persisted contact
+        Contact c = findContactById(id);
+
+        // Update the contact
+        c.setFirstName("Beatrix");
+
+        // Persist the changes
+        System.out.printf("%n%nUpdating...%n%n");
+        update(c);
+        System.out.printf("%n%nUpdate complete!%n%n");
+
+        // Display a list of contacts after the update
+        System.out.printf("%n%nAfter Updating%n%n");
+        fetchAllContacts().stream().forEach(System.out::println);
     }
 
-    @SuppressWarnings("unchecked")
+    private static Contact findContactById(int id) {
+        // Open a session
+        Session session = sessionFactory.openSession();
+
+        // Retrieve the persistent object (or null if not found)
+        Contact contact = session.get(Contact.class, id);
+
+        // Close the session
+        session.close();
+
+        // Return the object
+        return contact;
+    }
+
+    private static void update(Contact contact) {
+        // Open a session
+        Session session = sessionFactory.openSession();
+
+        // Begin a transaction
+        session.beginTransaction();
+
+        // Use the session to update
+        session.update(contact);
+
+        // Commit the transaction
+        session.getTransaction().commit();
+
+        // Close the session
+        session.close();
+    }
+
+    @SuppressWarnings("unchecked") // this line is for deprecated code
     private static List<Contact> fetchAllContacts() {
         // Open a session
         Session session = sessionFactory.openSession();
@@ -68,7 +112,7 @@ public class Application {
         return contacts;
     }
 
-    private static void save(Contact contact) {
+    private static int save(Contact contact) {
         // Open a session
         Session session = sessionFactory.openSession();
 
@@ -76,12 +120,14 @@ public class Application {
         session.beginTransaction();
 
         // Use the session to save the contact
-        session.save(contact);
+        int id = (int)session.save(contact);
 
         // Commit the transaction
         session.getTransaction().commit();
 
         // Close the session
         session.close();
+
+        return id;
     }
 }
